@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "vpncon"
+version = "0.1.0"
+description = "VPN control system with Flask, PostgreSQL, SQLAlchemy Core, Alembic, Telegram bot."
+authors = ["BlTniki <your@email.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.13"
+Flask = "^3.0"
+SQLAlchemy = "^2.0"
+psycopg2-binary = "^2.9"
+python-dotenv = "^1.0"
+requests = "^2.31"
+
+[tool.poetry.dev-dependencies]
+alembic = "^1.13"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -1,5 +1,4 @@
-from sqlalchemy import create_engine, MetaData, Engine
 from .config import Config
 
-engine:Engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, future=True) # type: ignore
-metadata = MetaData()
+# docker run -d -p 5432:5432 --name vpncon -e POSTGRES_USER=vpncon -e POSTGRES_PASSWORD=123456 -d postgres:13.22-alpine3.22
+

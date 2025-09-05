@@ -1,8 +1,14 @@
+import logging
+from logging import Formatter
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
 class Config:
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
-    TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+    DATABASE_URI:str = os.getenv("DATABASE_URL")
+    TELEGRAM_BOT_TOKEN:str = os.getenv("TELEGRAM_BOT_TOKEN")
+    LOGGER_FORMAT:Formatter = logging.Formatter(
+        os.getenv("LOGGER_FORMAT") or
+        '%(asctime)s %(levelname)s: %(message)s [in %(name)s]'
+    )

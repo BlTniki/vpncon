@@ -1,18 +1,20 @@
-from .users.api import bp as users_bp
-from .subscriptions.api import bp as subscriptions_bp
-from .users_subscriptions.api import bp as users_subscriptions_bp
-from .hosts.api import bp as hosts_bp
-from .peers.api import bp as peers_bp
-from flask import Flask
+# from flask import Flask
+import logging
 
-app = Flask(__name__)
+from .config import Config
 
-# Register blueprints for all entities
-app.register_blueprint(users_bp)
-app.register_blueprint(subscriptions_bp)
-app.register_blueprint(users_subscriptions_bp)
-app.register_blueprint(hosts_bp)
-app.register_blueprint(peers_bp)
+# root_handler = logging.StreamHandler()
+# root_handler.setLevel(logging.INFO)
+# logging.basicConfig(format=Config.LOGGER_FORMAT._fmt, handlers=[root_handler]) # type: ignore
 
-if __name__ == "__main__":
-    app.run(debug=True)
+r = logging.getLogger(__name__)
+# a = logging.getLogger('vpncon.a')
+
+r.info("Starting app...")
+# a.info("Starting app A...")
+
+# app = Flask(__name__)
+
+
+# if __name__ == "__main__":
+    # app.run(debug=True)

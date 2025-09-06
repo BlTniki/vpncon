@@ -10,10 +10,23 @@ logging.basicConfig(
 )
 
 r = logging.getLogger(__name__)
+r.setLevel(logging.DEBUG)
 a = logging.getLogger('vpncon.a')
 
-r.info("Starting app...")
+r.debug("Starting app...")
 a.info("Starting app A...")
+
+# from vpncon.db import db_executor
+
+# r.info("Starting app1...")
+
+# db_executor.open()
+# r.info("Starting app2...")
+# db_executor.execute("SELECT 1 as one, 2 as two")
+# r.info("Starting app3...")
+# db_executor.close()
+# r.info("Starting app4...")
+
 
 # app = Flask(__name__)
 

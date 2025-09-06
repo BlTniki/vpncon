@@ -1,0 +1,16 @@
+version: 1
+formatters:
+    frt:
+        format: '%(asctime)s %(levelname)s: %(message)s [in %(name)s]'
+
+handlers:
+    console:
+        class: logging.StreamHandler
+        level: DEBUG
+        formatter: frt
+        stream: ext://sys.stdout
+
+root:
+    level: DEBUG
+    handlers: [console]
+    propagate: yes

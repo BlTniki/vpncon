@@ -1,20 +1,28 @@
 # from flask import Flask
+import yaml
 import logging
+import logging.config
+
+with open('logging.yml', 'r', encoding='utf-8') as f:
+    logging_config = yaml.load(f, Loader=yaml.SafeLoader)
+logging.config.dictConfig(logging_config)
+
 
 from vpncon.config import Config
 
-root_handler = logging.StreamHandler()
-root_handler.setLevel(logging.INFO)
-logging.basicConfig(
-    level=logging.DEBUG,format=Config.LOGGER_FORMAT, handlers=[root_handler]
-)
+# root_handler = logging.StreamHandler()
+# root_handler.setLevel(logging.INFO)
+# logging.basicConfig(
+#     level=logging.DEBUG,format=Config.LOGGER_FORMAT, handlers=[root_handler],
+#     propa
+# )
 
 r = logging.getLogger(__name__)
-r.setLevel(logging.DEBUG)
+v = logging.getLogger('vpncon')
 a = logging.getLogger('vpncon.a')
 
 r.debug("Starting app...")
-a.info("Starting app A...")
+a.debug("Starting app A...")
 
 # from vpncon.db import db_executor
 

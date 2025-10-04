@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, LiteralString
 import logging
-# docker run -d -p 5432:5432 --name vpncon -e POSTGRES_USER=vpncon -e POSTGRES_PASSWORD=123456 -d postgres:13.22-alpine3.22
+
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +25,10 @@ class DBExecutor(ABC):
 
     @abstractmethod
     def close(self) -> None:
+        """Закрывает соединение"""
+
+    @abstractmethod
+    def commit_and_close(self) -> None:
         """Закрывает соединение и коммитит транзакцию"""
 
     @abstractmethod
@@ -37,19 +41,3 @@ class DBExecutor(ABC):
 
         Перед вызовом метода необходимо открыть соединение, вызвав `.open()`
         """
-
-
-def auto_transaction(func):
-    """Инициализирует подключение и транзакцию.
-    Транзакция открывается на входе в приложение
-
-    Args:
-        func (_type_): _description_
-    """
-    def wrapper(*args, **kwargs):
-        _proxy.init()
-        result = f(*args, **kwargs)
-        _proxy.kill()
-        return result
-    return wrapper
-

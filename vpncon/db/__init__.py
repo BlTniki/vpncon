@@ -1,3 +1,5 @@
+import threading
+import weakref
 import logging
 from .db import DBExecutor
 from .postgres_db import PostgresExecutor, get_pool, validate_connection
@@ -6,25 +8,42 @@ logger = logging.getLogger(__name__)
 
 logger.info("Initializing the DB module")
 
-# ❗️ Убираем создание пула на этапе импорта
-# ❗️ validate_connection() можно оставить для проверки доступности БД
-#    но выполнять её будем лениво при первом запросе пула
+
 validate_connection()
 logger.debug("Connection validated")
 
 
-db_executor: DBExecutor | None = None  # будет создан при первом доступе
+
+_thread_local = threading.local()
+
+def _create_executor() -> DBExecutor:
+    """Создаёт `DBExecutor` и вешает на него хук для его закрытия перед удалением Garbage Collector
+    """
+    executor = PostgresExecutor(get_pool())
+    # Освободить ресурсы при уничтожении объекта
+    # Думаю это можно назвать хуком, который будет вызван сборщиком мусора
+    weakref.finalize(executor, executor.close)
+    return executor
 
 def get_db_executor() -> DBExecutor:
+    """Возвращает `DBExecutor` для конкретного потока.
+    Инициализирует `DBExecutor`, если он еще создан для потока
     """
-    Возвращает готовый DBExecutor.
-    Если еще не создан, лениво создаёт пул и executor.
+    if not hasattr(_thread_local, "executor"):
+        _thread_local.executor = _create_executor()
+    return _thread_local.executor
+
+def auto_transaction(func):
+    """Инициализирует подключение и транзакцию.
+    Транзакция открывается на входе в приложение
+
+    Args:
+        func (_type_): _description_
     """
-    global db_executor
-    if db_executor is None:
-        logger.debug("Lazy initializing DBExecutor")
-        pool = get_pool()                 # создаём пул в воркере
-        validate_connection(pool)         # проверяем соединение
-        db_executor = PostgresExecutor(pool)
-        logger.info("DBExecutor initialized")
-    return db_executor
+    # 
+    def wrapper(*args, **kwargs):
+        _proxy.init()
+        result = f(*args, **kwargs)
+        _proxy.kill()
+        return result
+    return wrapper

@@ -8,7 +8,7 @@ setup_logging()
 logger = logging.getLogger(__name__)
 logger.info("Logging is set up")
 
-from vpncon.db import db_executor
+from vpncon.db import _db_executor
 
 # root_handler = logging.StreamHandler()
 # root_handler.setLevel(logging.INFO)

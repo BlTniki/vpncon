@@ -1,6 +1,6 @@
 from typing import Any
 from .model import users
-from ..db import db_executor
+from ..db import _db_executor
 
 def get_user(telegram_id:int) -> Row[Any] | None:
     with engine.connect() as conn:

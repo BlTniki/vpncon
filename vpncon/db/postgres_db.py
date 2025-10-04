@@ -1,4 +1,5 @@
 from typing import Any, LiteralString
+import threading
 import psycopg
 from psycopg.cursor import Cursor
 from psycopg import Connection
@@ -8,44 +9,37 @@ from psycopg_pool import ConnectionPool
 from ..config import Config
 from .db import DBExecutor
 
-# Глобальная переменная пула, но создаётся лениво
 _pool: ConnectionPool | None = None
-
+_pool_lock = threading.Lock()
 
 def get_pool() -> ConnectionPool:
-    """
-    Возвращает пул соединений. Создаёт его при первом обращении.
+    """ Возвращает пул соединений. Создаёт его при первом обращении.
+
+    Потокобезопасный. Разделяет общий пул на все потоки
     """
     global _pool
-    if _pool is None:
-        _pool = ConnectionPool(
-            conninfo=Config.DB_URI,
-            min_size=Config.DB_POOL_MIN_SIZE,
-            max_size=Config.DB_POOL_MAX_SIZE,
-        )
+    if _pool is None:                        # быстрая проверка без блокировки
+        with _pool_lock:                      # блокируем создание
+            if _pool is None:                 # повторная проверка (double-checked locking)
+                _pool = ConnectionPool(
+                    conninfo=Config.DB_URI,
+                    min_size=Config.DB_POOL_MIN_SIZE,
+                    max_size=Config.DB_POOL_MAX_SIZE,
+                )
     return _pool
 
 
-def validate_connection(pool: ConnectionPool | None = None) -> None:
+def validate_connection() -> None:
     """
     Проверяет, что можно выполнить простейший запрос к базе.
-    Использует переданный пул или создаёт временное соединение.
+    Создаёт временное соединение
     """
-    if pool is not None:
-        with pool.connection() as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT 1")
-                result = cur.fetchone()
-                if result is None or result[0] != 1:
-                    raise RuntimeError("Database connection validation failed.")
-    else:
-        # если пул ещё не создан — делаем временное подключение
-        with psycopg.connect(Config.DB_URI) as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT 1")
-                result = cur.fetchone()
-                if result is None or result[0] != 1:
-                    raise RuntimeError("Database connection validation failed.")
+    with psycopg.connect(Config.DB_URI) as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT 1")
+            result = cur.fetchone()
+            if result is None or result[0] != 1:
+                raise RuntimeError("Database connection validation failed.")
 
 
 class PostgresExecutor(DBExecutor):
@@ -67,6 +61,15 @@ class PostgresExecutor(DBExecutor):
         self.cur = self.conn.cursor()  # type: ignore
 
     def close(self):
+        if self.cur:
+            self.cur.close()
+        if self.conn:
+            self.pool.putconn(self.conn)
+        self.conn = None
+        self.cur = None
+
+
+    def commit_and_close(self):
         if self.cur:
             self.cur.close()
         if self.conn:

@@ -45,18 +45,21 @@ from .postgres_db import PostgresExecutor, get_pool, validate_connection
 # Строгое ограничение для импорта внешним кодом
 # Модуль может гарантировать что либо, только при правильном использовании
 # Поэтому вставляю все палки в колёса необдуманному использованию
-__all__ = ["DBExecutor", "get_db_executor", "auto_transaction"]
+__all__ = ["DBExecutor", "get_db_executor", "auto_transaction", "validate_connection"]
 def __getattr__(name:str):
     if name not in __all__:
-        raise ImportError(f"Cannot import '{name}' from {__name__}")
+        raise ImportError(
+            f"Restricted access! Cannot import '{name}' from {__name__}. Use only {__all__}"
+        )
     return globals()[name]
 
 
 logger = logging.getLogger(__name__)
 
-logger.info("Initializing the DB module")
-validate_connection()
-logger.debug("Connection validated")
+# ToDo: Вынести это в инициализацию приложения
+# logger.info("Initializing the DB module")
+# validate_connection()
+# logger.debug("Connection validated")
 
 
 
@@ -109,6 +112,7 @@ def auto_transaction(func: Callable[P, R]) -> Callable[P, R]:
         _thread_local.tx_depth = depth + 1
         logger.debug("auto_transaction: call depth: %d", _thread_local.tx_depth)
 
+        # Получаем экзекьютер для текущего потока
         db_executor = get_db_executor()
 
         # Если это первый уровень — открываем транзакцию

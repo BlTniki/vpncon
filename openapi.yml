@@ -1,0 +1,11 @@
+openapi: 3.0.0
+info:
+  title: Flask API
+  version: 1.0.0
+paths:
+  /api/add:
+    get:
+      summary: Пример сложения
+      responses:
+        200:
+          description: Успешный ответ

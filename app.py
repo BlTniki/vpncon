@@ -16,20 +16,15 @@ logger.debug("Connection validated")
 logger.info("DB module is initialized")
 
 
-# from vpncon.db import db_executor
+from flask import Flask
+# from vpncon.users import users_bp
+app = Flask(__name__)
+# app.register_blueprint(users_bp)
 
-# r.info("Starting app1...")
-
-# db_executor.open()
-# r.info("Starting app2...")
-# db_executor.execute("SELECT 1 as one, 2 as two")
-# r.info("Starting app3...")
-# db_executor.close()
-# r.info("Starting app4...")
+api_doc(app, config_path='openapi.yml', url_prefix='/api/doc', title='API doc')
 
 
-# app = Flask(__name__)
 
 
-# if __name__ == "__main__":
-    # app.run(debug=True)
+if __name__ == "__main__":
+    app.run(debug=True)

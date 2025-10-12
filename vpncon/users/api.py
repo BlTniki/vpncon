@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from .crud import get_user, create_user, update_user, delete_user
 
-bp = Blueprint('users_api', __name__, url_prefix='/users')
+users_bp = Blueprint('users_api', __name__, url_prefix='/users')
 
 @bp.route('/<int:telegram_id>', methods=['GET'])
 def api_get_user(telegram_id):

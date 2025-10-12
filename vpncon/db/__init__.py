@@ -56,12 +56,6 @@ def __getattr__(name:str):
 
 logger = logging.getLogger(__name__)
 
-# ToDo: Вынести это в инициализацию приложения
-# logger.info("Initializing the DB module")
-# validate_connection()
-# logger.debug("Connection validated")
-
-
 
 _thread_local = threading.local()
 

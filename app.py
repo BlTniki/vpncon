@@ -4,18 +4,16 @@ import logging
 from vpncon.config import Config, setup_logging
 
 setup_logging()
-
 logger = logging.getLogger(__name__)
 logger.info("Logging is set up")
 
-from vpncon.db import _db_executor
 
-# root_handler = logging.StreamHandler()
-# root_handler.setLevel(logging.INFO)
-# logging.basicConfig(
-#     level=logging.DEBUG,format=Config.LOGGER_FORMAT, handlers=[root_handler],
-#     propa
-# )
+from vpncon.db import validate_connection
+
+logger.debug("Initializing the DB module")
+validate_connection()
+logger.debug("Connection validated")
+logger.info("DB module is initialized")
 
 
 # from vpncon.db import db_executor

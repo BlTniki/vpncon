@@ -1,5 +1,5 @@
-# from flask import Flask
 import logging
+from swagger_ui import api_doc
 
 from vpncon.config import Config, setup_logging
 

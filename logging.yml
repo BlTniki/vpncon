@@ -4,12 +4,21 @@ disable_existing_loggers: False
 formatters:
   standard:
     format: "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+  colored:
+    (): colorlog.ColoredFormatter
+    format: "%(log_color)s%(asctime)s [%(levelname)s]%(reset)s %(name)s: %(message)s"
+    log_colors:
+      DEBUG: white
+      INFO: cyan
+      WARNING: yellow
+      ERROR: red
+      CRITICAL: bold_red,bg_white
 
 handlers:
   console:
     class: logging.StreamHandler
     level: DEBUG
-    formatter: standard
+    formatter: colored
     stream: ext://sys.stdout
 
   file:

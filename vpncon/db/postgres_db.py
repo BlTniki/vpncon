@@ -1,6 +1,7 @@
 from typing import Any, LiteralString
 import threading
 import psycopg
+import logging
 from psycopg.cursor import Cursor
 from psycopg import Connection
 from psycopg.rows import TupleRow
@@ -8,6 +9,8 @@ from psycopg_pool import ConnectionPool
 
 from ..config import Config
 from .db import DBExecutor
+
+logger = logging.getLogger(__name__)
 
 _pool: ConnectionPool | None = None
 _pool_lock = threading.Lock()
@@ -32,14 +35,18 @@ def get_pool() -> ConnectionPool:
 def validate_connection() -> None:
     """
     Проверяет, что можно выполнить простейший запрос к базе.
-    Создаёт временное соединение
+    Создаёт временное соединение с таймаутом 20 секунд
     """
-    with psycopg.connect(Config.DB_URI) as conn:
+    logger.debug("Trying to connect to the database...")
+    with psycopg.connect(Config.DB_URI, connect_timeout=20) as conn:
+        logger.debug("Connection to the database established.")
         with conn.cursor() as cur:
+            logger.debug("Executing test query...")
             cur.execute("SELECT 1")
             result = cur.fetchone()
             if result is None or result[0] != 1:
                 raise RuntimeError("Database connection validation failed.")
+    logger.debug("Database connection validated successfully")
 
 
 class PostgresExecutor(DBExecutor):

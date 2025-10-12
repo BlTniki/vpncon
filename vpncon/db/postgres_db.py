@@ -8,7 +8,7 @@ from psycopg.rows import TupleRow
 from psycopg_pool import ConnectionPool
 
 from ..config import Config
-from .db import DBExecutor
+from .db import DBExecutor, UniqueConstraintError
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +97,13 @@ class PostgresExecutor(DBExecutor):
     def execute(self, query: LiteralString, **kwargs: Any) -> list[tuple[Any, ...]]:
         if not self.conn or not self.cur:
             raise RuntimeError("Connection is not open. Use 'open()' method first.")
-        self.cur.execute(query, kwargs)
-        if self.cur.description:
-            return self.cur.fetchall()
-        return []
+        try:
+            self.cur.execute(query, kwargs)
+            if self.cur.description:
+                return self.cur.fetchall()
+            return []
+        except Exception as exc:
+            # Абстрагированная проверка по имени класса
+            if exc.__class__.__name__ == "IntegrityError":
+                raise UniqueConstraintError() from exc
+            raise

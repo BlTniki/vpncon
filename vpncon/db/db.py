@@ -1,9 +1,14 @@
 from abc import ABC, abstractmethod
 from typing import Any, LiteralString
 import logging
+import dataclasses
 
 
 logger = logging.getLogger(__name__)
+
+class UniqueConstraintError(Exception):
+    """Raised when a unique constraint is violated in the database."""
+
 
 class DBExecutor(ABC):
     """Обёртка вокруг драйвера ДБ.
@@ -41,3 +46,18 @@ class DBExecutor(ABC):
 
         Перед вызовом метода необходимо открыть соединение, вызвав `.open()`
         """
+
+
+class DataModel(object):
+    """Базовый класс для моделей данных, реализованных через dataclass.
+    """
+    @classmethod
+    def get_model_fields(cls) -> list[str]:
+        """
+        Возвращает список полей модели в порядке их объявления.
+        Работает для всех dataclass, унаследованных от DataModel.
+        """
+        # Проверяем, что cls является dataclass
+        if not dataclasses.is_dataclass(cls):
+            raise TypeError(f"{cls.__name__} is not a dataclass")
+        return [field.name for field in dataclasses.fields(cls)]

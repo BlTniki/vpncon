@@ -1,17 +1,8 @@
 from typing import Any
-from sqlalchemy import Table, Column, BigInteger, String, Row
-from ..db import metadata
 from dataclasses import dataclass
 from enum import StrEnum
 
-
-users = Table(
-    "users",
-    metadata,
-    Column("telegram_id", BigInteger, primary_key=True),
-    Column("telegram_nick", String),
-    Column("role", String),
-)
+from vpncon.db import DataModel
 
 
 class Role(StrEnum):
@@ -23,11 +14,37 @@ class Role(StrEnum):
 
 
 @dataclass(frozen=True)
-class User:
+class User(DataModel):
+    """Модель пользователя."""
     telegram_id: int
     telegram_nick: str
     role: Role
 
     @staticmethod
-    def from_row(row:Row[Any]) -> 'User':
-        return User(row.telegram_id, row.telegram_nick, Role(row.role))
+    def from_raw(raw: tuple[Any, ...]) -> 'User':
+        """Создаёт экземпляр `User` из сырых данных, полученных из БД.
+
+        Args:
+            raw (tuple[Any, ...]): Сырые данные из БД.
+
+        Returns:
+            User: Экземпляр `User`.
+        Raises:
+            ValueError: Если поля не приводятся к нужным типам.
+        """
+        fields = User.get_model_fields()
+        data = dict(zip(fields, raw))
+        try:
+            telegram_id = int(data['telegram_id'])
+            telegram_nick = str(data['telegram_nick'])
+            role = Role(data['role'])
+        except (ValueError, TypeError) as exc:
+            raise ValueError(
+                f"Invalid data for User: {data}"
+            ) from exc
+
+        return User(
+            telegram_id=telegram_id,
+            telegram_nick=telegram_nick,
+            role=role
+        )

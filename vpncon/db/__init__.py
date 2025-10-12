@@ -9,6 +9,9 @@
 ```python
 from db import get_db_executor
 
+# !!! Важно !!!
+# Вызывать get_db_executor() нужно внутри функции, которая обрабатывает запрос
+# Тем самым гарантируется, что для каждого потока будет свой экземпляр и свой пул
 db_executor = get_db_executor()
 db_executor.open()
 try:
@@ -39,13 +42,14 @@ from typing import Callable, TypeVar, ParamSpec
 from functools import wraps
 import weakref
 import logging
-from .db import DBExecutor
+from .db import DBExecutor, DataModel, UniqueConstraintError
 from .postgres_db import PostgresExecutor, get_pool, validate_connection
 
 # Строгое ограничение для импорта внешним кодом
 # Модуль может гарантировать что либо, только при правильном использовании
 # Поэтому вставляю все палки в колёса необдуманному использованию
-__all__ = ["DBExecutor", "get_db_executor", "auto_transaction", "validate_connection"]
+__all__ = ["DBExecutor", "get_db_executor", "auto_transaction",
+           "validate_connection", "DataModel", "UniqueConstraintError"]
 def __getattr__(name:str):
     if name not in __all__:
         raise ImportError(

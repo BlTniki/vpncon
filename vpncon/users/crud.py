@@ -1,6 +1,6 @@
 from typing import Any
-from .model import User
 from vpncon.db import auto_transaction, get_db_executor, UniqueConstraintError
+from .model import User
 
 
 @auto_transaction

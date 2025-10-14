@@ -3,9 +3,90 @@ info:
   title: Flask API
   version: 1.0.0
 paths:
-  /api/add:
+  /users/{telegram_id}:
     get:
-      summary: Пример сложения
+      summary: Получить пользователя по telegram_id
+      parameters:
+        - name: telegram_id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
         200:
-          description: Успешный ответ
+          description: Данные пользователя
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  telegram_id:
+                    type: integer
+                  telegram_nick:
+                    type: string
+                  role:
+                    type: string
+        404:
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /users/:
+    post:
+      summary: Создать нового пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                telegram_id:
+                  type: integer
+                telegram_nick:
+                  type: string
+                role:
+                  type: string
+                  nullable: true
+      responses:
+        201:
+          description: Пользователь создан
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+        400:
+          description: telegram_id не уникален
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string

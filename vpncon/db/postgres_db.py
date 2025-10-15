@@ -1,13 +1,13 @@
 from typing import Any, LiteralString
 import threading
-import psycopg
 import logging
+import psycopg
 from psycopg.cursor import Cursor
 from psycopg import Connection
 from psycopg.rows import TupleRow
 from psycopg_pool import ConnectionPool
 
-from ..config import Config
+from vpncon.config import Config
 from .db import DBExecutor, UniqueConstraintError
 
 logger = logging.getLogger(__name__)

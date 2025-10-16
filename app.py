@@ -18,10 +18,15 @@ logger.info("Logging is set up")
 # Initialize DB
 # ===============================================
 from vpncon.db import validate_connection
+from vpncon.db.db_migrations import DbMigrator, PostgresMigrationExecutor
 
 logger.debug("Initializing the DB module")
 validate_connection()
 logger.debug("Connection validated")
+
+
+logger.info("Applying DB migrations if needed")
+DbMigrator(PostgresMigrationExecutor).apply_migrations()
 logger.info("DB module is initialized")
 
 

@@ -4,7 +4,8 @@
 
 script = """
 CREATE TABLE IF NOT EXISTS schema_migrations (
-    version VARCHAR PRIMARY KEY,
-    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    version INT PRIMARY KEY,
+    full_name VARCHAR(255) NOT NULL,
+    applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 """

@@ -1,4 +1,10 @@
+"""Модуль для управления миграциями и валидацией схемы БД.
+Собирает миграции из папки `.migrations` и применяет их по необходимости.
+Также инициализирует таблицу версий схемы БД при первой миграции.
+"""
+
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import Any, LiteralString
 import logging
 import psycopg
@@ -20,8 +26,8 @@ class MigrationExecutor(ABC):
     Не предоставляет управление транзакциями,
     подключение открывается и закрывается для каждого запроса.
     """
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def execute(query: LiteralString, **kwargs: Any) -> list[tuple[Any, ...]]:
         """Выполняет переданные запросы с параметрами
           и возвращает ответ в виде списка списка кортежей."""
@@ -46,40 +52,92 @@ class PostgresMigrationExecutor(MigrationExecutor):
                     return []
 
 
-class DbMigration:
+# дата класс для хранения миграции
+@dataclass(frozen=True)
+class Migration:
+    prefix: str
+    version: int
+    name: str
+    script: LiteralString
+
+    @staticmethod
+    def build(filename: str, script: LiteralString) -> "Migration":
+        parts = filename.split('_', 2)
+        if len(parts) != 3 or not parts[1].isdigit():
+            raise ValueError(f"Invalid migration filename format: {filename}")
+        return Migration(
+            prefix=parts[0],
+            version=int(parts[1]),
+            name=parts[2],
+            script=script
+        )
+
+    def __str__(self) -> str:
+        return f"{self.prefix}_{self.version:04d}_{self.name}"
+
+
+class DbMigrator:
     """Класс для управления миграциями и валидацией схемы БД.
     Использует `MigrationExecutor` для выполнения запросов.
     """
-    def __init__(self, executor: MigrationExecutor) -> None:
+    def __init__(self, executor: type[MigrationExecutor]) -> None:
         self.executor = executor
 
-    def _load_migrations(self) -> list[tuple[str, str]]:
-        """Загружает список миграций из папки `migrations` в формате
-        [('M_0000_init_schema_migrations', 'CREATE TABLE ...'), ...]
+    def _load_migrations(self) -> list[Migration]:
+        """Загружает список миграций из папки `migrations`
         """
         migrations_dir = os.path.dirname(__file__) + '/migrations'
         logger.debug("Loading migrations from directory: %s", migrations_dir)
         migration_files = [
             f for f in os.listdir(migrations_dir) if f.startswith('M_') and f.endswith('.py')
         ]
-        migration_files.sort()
-        migrations:list[tuple[str, str]] = []
+        migrations:list[Migration] = []
         for fname in migration_files:
             mod_name = f'.migrations.{fname[:-3]}'
             mod = importlib.import_module(mod_name, package=__package__)
-            if hasattr(mod, 'script'):
-                migrations.append((fname[:6], mod.script))
+            mod_script = getattr(mod, 'script')
+            if mod_script:
+                migrations.append(Migration.build(fname, mod_script))
+        migrations.sort(key=lambda m: m.version)
         return migrations
 
-    def _update_version_in_schema_migrations(self, version: str) -> None:
-        """Обновляет текущую версию схемы в таблице schema_migrations
+    def _get_current_schema_version(self) -> int | None:
+        """Получает текущую версию схемы из таблицы schema_migrations.
+        Если таблицы нет, возвращает None.
         """
-        insert_query = """
-            INSERT INTO schema_migrations (version)
-            VALUES (%(version)s)
-            ON CONFLICT (version) DO NOTHING
+        table_name = 'schema_migrations'
+        check_table_query = """
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = %(table_name)s
+            )
         """
-        self.executor.execute(insert_query, version=version)
+        table_exists = self.executor.execute(check_table_query, table_name=table_name)
+        if not table_exists or not table_exists[0][0]:
+            return None
+        get_version_query = f"SELECT version FROM {table_name} order by version desc limit 1"
+        version_result = self.executor.execute(get_version_query)
+        if version_result and version_result[0][0] is not None:
+            return version_result[0][0]
+        return None
+
+    def _apply_migration(self, migration:Migration) -> None:
+        """
+        Применяет миграцию и
+        Обновляет текущую версию схемы в таблице schema_migrations
+        """
+        # По сути просто дописываем в конец обновление версии в schema_migrations
+        # Чтобы это точно было в одной транзакции
+        migration_query = migration.script + """
+            ;
+            INSERT INTO schema_migrations (version, full_name)
+            VALUES (%(version)s, %(full_name)s)
+        """
+        self.executor.execute(
+            migration_query,
+            version=migration.version,
+            full_name=str(migration)
+        )
 
     def apply_migrations(self) -> None:
         """
@@ -88,7 +146,7 @@ class DbMigration:
         """
         # 1. Получить список миграций
         migrations = self._load_migrations()
-        if not migrations or migrations[0][0] != 'M_0000_init_schema_migrations':
+        if not migrations or migrations[0].version != 0:
             logger.fatal(
                 "Migration directory is empty or missing the initial migration." \
                 " There must be at least the M_0000_init_schema_migrations migration."
@@ -96,28 +154,18 @@ class DbMigration:
             raise RuntimeError("No migrations found.")
 
         # 2. Определяем текущую версию схемы
-        table_name = 'schema_migrations'
-        check_table_query = """
-            SELECT EXISTS (
-                SELECT FROM information_schema.tables 
-                WHERE table_name = '(%(table_name)s)'
-            )
-        """
-        table_exists = self.executor.execute(check_table_query, table_name=table_name)
-        if not table_exists or not table_exists[0][0]:
-            logger.info("Schema migrations table does not exist. Creating it.")
-            # Применить первую миграцию для создания таблицы
-            if hasattr(migrations[0], 'upgrade'):
-                migrations[0].upgrade(self.executor)
+        current_version = self._get_current_schema_version()
+        logger.info("Current DB schema version: %s", current_version)
 
-        # 3. Получить текущую версию схемы
-        get_version_query = f"SELECT max(version) FROM {table_name}"
-        version_result = self.executor.execute(get_version_query)
-        current_version = version_result[0][0] if version_result and version_result[0][0] is not None else 0
+        # 3. Фильтруем миграции, которые нужно применить
+        migrations_to_apply_filter = filter(
+            lambda m: current_version is None or m.version > current_version, migrations
+        )
 
         # 4. Применить недостающие миграции
-        for idx, migration in enumerate(migrations):
-            migration_version = idx
-            if migration_version > current_version:
-                if hasattr(migration, 'upgrade'):
-                    migration.upgrade(self.executor)
+        for migration in migrations_to_apply_filter:
+            logger.info("Applying migration: %s", migration)
+            self._apply_migration(migration)
+            logger.info("Migration applied: %s", migration)
+
+        logger.info("DB schema is up to date")

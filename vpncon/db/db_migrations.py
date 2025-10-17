@@ -64,10 +64,10 @@ class Migration:
     prefix: str
     version: int
     name: str
-    script: LiteralString
+    scripts: list[LiteralString]
 
     @staticmethod
-    def build(filename: str, script: LiteralString) -> "Migration":
+    def build(filename: str, scripts: list[LiteralString]) -> "Migration":
         parts = filename.split('_', 2)
         if len(parts) != 3 or not parts[1].isdigit():
             raise ValueError(f"Invalid migration filename format: {filename}")
@@ -75,7 +75,7 @@ class Migration:
             prefix=parts[0],
             version=int(parts[1]),
             name=parts[2],
-            script=script
+            scripts=scripts
         )
 
     def __str__(self) -> str:
@@ -101,9 +101,9 @@ class DbMigrator:
         for fname in migration_files:
             mod_name = f'.migrations.{fname[:-3]}'
             mod = importlib.import_module(mod_name, package=__package__)
-            mod_script = getattr(mod, 'script')
-            if mod_script:
-                migrations.append(Migration.build(fname, mod_script))
+            mod_scripts = getattr(mod, 'scripts')
+            if mod_scripts:
+                migrations.append(Migration.build(fname, mod_scripts))
         migrations.sort(key=lambda m: m.version)
         return migrations
 
@@ -135,7 +135,7 @@ class DbMigrator:
         # По сути просто дописываем в конец обновление версии в schema_migrations
         # Чтобы это точно было в одной транзакции
         migration_queries:list[LiteralString] = [
-            *migration.script.split(";"),
+            *migration.scripts,
             """
             INSERT INTO schema_migrations (version, full_name)
             VALUES (%(version)s, %(full_name)s)

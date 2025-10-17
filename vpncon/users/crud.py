@@ -31,13 +31,11 @@ def get_user(telegram_id:int) -> User | None:
     return User.from_raw(result[0])
 
 @auto_transaction
-def create_user(telegram_id: int, telegram_nick: str, role: str) -> None:
+def create_user(user:User) -> None:
     """Создаёт нового пользователя.
     Если пользователь с таким telegram_id уже существует, бросает исключение.
     Args:
-        telegram_id (int): Идентификатор пользователя в Telegram.
-        telegram_nick (str): Никнейм пользователя в Telegram.
-        role (str): Роль пользователя.
+        user (User): Экземпляр пользователя для создания.
     """
 
     executor = get_db_executor()
@@ -46,26 +44,51 @@ def create_user(telegram_id: int, telegram_nick: str, role: str) -> None:
         VALUES (%(telegram_id)s, %(telegram_nick)s, %(role)s)
     """
     params: dict[str, Any] = {
-        'telegram_id': telegram_id,
-        'telegram_nick': telegram_nick,
-        'role': role
+        'telegram_id': user.telegram_id,
+        'telegram_nick': user.telegram_nick,
+        'role': user.role
     }
     try:
         executor.execute(query, **params)
     except UniqueConstraintError as exc:
         # Абстрагированная проверка по имени класса
         raise UniqueConstraintError(
-            f"User with telegram_id={telegram_id} already exists"
+            f"User with telegram_id={user.telegram_id} already exists"
         ) from exc
 
-# def update_user(telegram_id:int, **fields:Any):
-#     with engine.connect() as conn:
-#         stmt = update(users).where(users.c.telegram_id == telegram_id).values(**fields)
-#         conn.execute(stmt)
-#         conn.commit()
+@auto_transaction
+def update_user(user:User) -> None:
+    """Обновляет данные пользователя.
 
-# def delete_user(telegram_id: int):
-#     with engine.connect() as conn:
-#         stmt = delete(users).where(users.c.telegram_id == telegram_id)
-#         conn.execute(stmt)
-#         conn.commit()
+    Args:
+        user (User): Экземпляр пользователя с обновлёнными данными.
+    """
+    executor = get_db_executor()
+    query = f"""
+        UPDATE users
+        SET telegram_nick = %(telegram_nick)s,
+            role = %(role)s
+        WHERE telegram_id = %(telegram_id)s
+    """
+    params: dict[str, Any] = {
+        'telegram_id': user.telegram_id,
+        'telegram_nick': user.telegram_nick,
+        'role': user.role
+    }
+    executor.execute(query, **params)
+
+@auto_transaction
+def delete_user(telegram_id: int) -> None:
+    """Удаляет пользователя по его telegram_id.
+
+    Args:
+        telegram_id (int): Идентификатор пользователя в Telegram.
+    """
+    executor = get_db_executor()
+    query = """
+        DELETE FROM users WHERE telegram_id = %(telegram_id)s
+    """
+    params: dict[str, Any] = {
+        'telegram_id': telegram_id
+    }
+    executor.execute(query, **params)

@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from vpncon.db import auto_transaction
 from .crud import get_user, create_user#, update_user, delete_user
+from .model import User
 
 users_bp = Blueprint('users_api', __name__, url_prefix='/users')
 
@@ -16,7 +17,8 @@ def api_get_user(telegram_id:int):
 @auto_transaction
 def api_create_user():
     data = request.json
-    create_user(data.get('telegram_id'), data.get('telegram_nick'), data.get('role'))
+    user = User(data.get('telegram_id'), data.get('telegram_nick'), data.get('role'))
+    create_user(user)
     return jsonify({'status': 'created'}), 201
 
 # @users_bp.route('/<int:telegram_id>', methods=['PUT'])

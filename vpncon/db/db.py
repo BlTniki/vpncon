@@ -61,3 +61,18 @@ class DataModel(object):
         if not dataclasses.is_dataclass(cls):
             raise TypeError(f"{cls.__name__} is not a dataclass")
         return [field.name for field in dataclasses.fields(cls)]
+
+    @classmethod
+    def get_model_fields_joined(cls, sep:str=', ') -> LiteralString:
+        """
+        Возвращает строку с перечислением полей модели в порядке их объявления, разделённых `sep`.
+        Работает для всех dataclass, унаследованных от DataModel.
+
+        По сути, это просто для каста `get_model_fields()` в `LiteralString`,
+        чтобы типизатор не ругался.
+        """
+        # Trust me, pyright, it's LiteralString
+        joined_fields:LiteralString = sep.join(
+            cls.get_model_fields()
+        ) # pyright: ignore[reportAssignmentType]
+        return joined_fields

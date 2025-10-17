@@ -64,10 +64,12 @@ class PostgresExecutor(DBExecutor):
                 "Incorrect use: repeated .open() method"
                 + " invocation when the connection is already open"
             )
+        logger.debug("Opening new connection from the pool")
         self.conn = self.pool.getconn()
         self.cur = self.conn.cursor()  # type: ignore
 
     def close(self):
+        logger.debug("Closing connection")
         if self.cur:
             self.cur.close()
         if self.conn:
@@ -77,6 +79,7 @@ class PostgresExecutor(DBExecutor):
 
 
     def commit_and_close(self):
+        logger.debug("Closing connection with commit")
         if self.cur:
             self.cur.close()
         if self.conn:
@@ -86,6 +89,7 @@ class PostgresExecutor(DBExecutor):
         self.cur = None
 
     def rollback_and_close(self) -> None:
+        logger.debug("Closing connection with rollback")
         if self.cur:
             self.cur.close()
         if self.conn:
@@ -98,12 +102,13 @@ class PostgresExecutor(DBExecutor):
         if not self.conn or not self.cur:
             raise RuntimeError("Connection is not open. Use 'open()' method first.")
         try:
+            logger.debug("Executing query: `%s`, with param `%s`", query, kwargs)
             self.cur.execute(query, kwargs)
             if self.cur.description:
                 return self.cur.fetchall()
             return []
         except Exception as exc:
             # Абстрагированная проверка по имени класса
-            if exc.__class__.__name__ == "IntegrityError":
+            if exc.__class__.__name__ == "UniqueViolation":
                 raise UniqueConstraintError() from exc
             raise

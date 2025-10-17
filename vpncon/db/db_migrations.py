@@ -28,7 +28,7 @@ class MigrationExecutor(ABC):
     """
     @staticmethod
     @abstractmethod
-    def execute(query: LiteralString, **kwargs: Any) -> list[tuple[Any, ...]]:
+    def execute(queries: list[LiteralString], **kwargs: Any) -> list[list[tuple[Any, ...]]]:
         """Выполняет переданные запросы с параметрами
           и возвращает ответ в виде списка списка кортежей."""
 
@@ -39,22 +39,28 @@ class PostgresMigrationExecutor(MigrationExecutor):
     """
 
     @staticmethod
-    def execute(query: LiteralString, **kwargs: Any) -> list[tuple[Any, ...]]:
+    def execute(queries: list[LiteralString], **kwargs: Any) -> list[list[tuple[Any, ...]]]:
         logger.debug("Opening new connection for migration executor")
         with psycopg.connect(Config.DB_URI, connect_timeout=20) as conn:
             logger.debug("Connection opened")
             with conn.cursor() as cur:
-                logger.debug("Executing query: %s", query)
-                cur.execute(query, kwargs)
-                if cur.description:
-                    return cur.fetchall()
-                else:
-                    return []
+                results:list[list[tuple[Any, ...]]] = []
+                for query in queries:
+                    logger.debug("Executing query: %s", query)
+                    cur.execute(query, kwargs)
+                    if cur.description:
+                        results.append(cur.fetchall())
+                    else:
+                        results.append([])
+        return results
 
 
 # дата класс для хранения миграции
 @dataclass(frozen=True)
 class Migration:
+    """
+    Представляет миграцию схемы БД.
+    """
     prefix: str
     version: int
     name: str
@@ -112,13 +118,13 @@ class DbMigrator:
                 WHERE table_name = %(table_name)s
             )
         """
-        table_exists = self.executor.execute(check_table_query, table_name=table_name)
-        if not table_exists or not table_exists[0][0]:
+        table_exists = self.executor.execute([check_table_query], table_name=table_name)
+        if not table_exists or not table_exists[0][0][0]:
             return None
         get_version_query = f"SELECT version FROM {table_name} order by version desc limit 1"
-        version_result = self.executor.execute(get_version_query)
-        if version_result and version_result[0][0] is not None:
-            return version_result[0][0]
+        version_result = self.executor.execute([get_version_query])
+        if version_result[0] and version_result[0][0][0] is not None:
+            return version_result[0][0][0]
         return None
 
     def _apply_migration(self, migration:Migration) -> None:
@@ -128,13 +134,15 @@ class DbMigrator:
         """
         # По сути просто дописываем в конец обновление версии в schema_migrations
         # Чтобы это точно было в одной транзакции
-        migration_query = migration.script + """
-            ;
+        migration_queries:list[LiteralString] = [
+            *migration.script.split(";"),
+            """
             INSERT INTO schema_migrations (version, full_name)
             VALUES (%(version)s, %(full_name)s)
-        """
+            """
+        ]
         self.executor.execute(
-            migration_query,
+            migration_queries,
             version=migration.version,
             full_name=str(migration)
         )

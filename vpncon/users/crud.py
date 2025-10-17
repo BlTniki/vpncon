@@ -1,4 +1,5 @@
 from typing import Any
+from venv import logger
 from vpncon.db import auto_transaction, get_db_executor, UniqueConstraintError
 from .model import User
 
@@ -12,9 +13,13 @@ def get_user(telegram_id:int) -> User | None:
         User | None: Экземпляр User, если пользователь найден, иначе None.
     """
     executor = get_db_executor()
-    query = "SELECT %(model_cols)s FROM users WHERE telegram_id = %(telegram_id)s"
+
+    query = f"""
+        SELECT
+            {User.get_model_fields_joined()}
+        FROM users WHERE telegram_id = %(telegram_id)s
+    """
     params:dict[str, Any] = {
-        'model_cols': ', '.join(User.get_model_fields()),
         'telegram_id': telegram_id
     }
     result = executor.execute(query, **params)
@@ -22,6 +27,7 @@ def get_user(telegram_id:int) -> User | None:
         return None
     if len(result) > 1:
         raise ValueError(f"Multiple users found with telegram_id={telegram_id}")
+    logger.debug("User found: %s", result)
     return User.from_raw(result[0])
 
 @auto_transaction
@@ -35,12 +41,11 @@ def create_user(telegram_id: int, telegram_nick: str, role: str) -> None:
     """
 
     executor = get_db_executor()
-    query = """
-        INSERT INTO users (%(model_cols)s)
+    query = f"""
+        INSERT INTO users ({User.get_model_fields_joined()})
         VALUES (%(telegram_id)s, %(telegram_nick)s, %(role)s)
     """
     params: dict[str, Any] = {
-        'model_cols': ', '.join(User.get_model_fields()),
         'telegram_id': telegram_id,
         'telegram_nick': telegram_nick,
         'role': role

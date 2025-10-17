@@ -45,4 +45,4 @@ api_doc(app, config_path='openapi.yml', url_prefix='/api/doc', title='API doc')
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)

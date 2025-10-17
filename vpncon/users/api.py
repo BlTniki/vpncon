@@ -16,7 +16,7 @@ def api_get_user(telegram_id:int):
 @auto_transaction
 def api_create_user():
     data = request.json
-    create_user(data.get['telegram_id'], data.get('telegram_nick'), data.get('role'))
+    create_user(data.get('telegram_id'), data.get('telegram_nick'), data.get('role'))
     return jsonify({'status': 'created'}), 201
 
 # @users_bp.route('/<int:telegram_id>', methods=['PUT'])

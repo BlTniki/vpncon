@@ -6,7 +6,7 @@ from swagger_ui import api_doc
 # ===============================================
 # Setup logging
 # ===============================================
-from vpncon.config import Config, setup_logging
+from vpncon.config import setup_logging
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ logger.info("DB module is initialized")
 # ===============================================
 # Initialize API
 # ===============================================
-from vpncon.users.api import users_bp
+from vpncon.users import users_bp
 
 app = Flask(__name__)
 app.register_blueprint(users_bp)

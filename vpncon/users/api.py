@@ -1,6 +1,5 @@
 from flask import jsonify, request
 from vpncon.db import auto_transaction
-from .model import User
 from ..users import users_bp, user_service
 
 

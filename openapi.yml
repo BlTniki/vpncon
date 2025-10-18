@@ -5,6 +5,7 @@ info:
 paths:
   /users/{telegram_id}:
     get:
+      tags: ["Users"]
       summary: Получить пользователя по telegram_id
       parameters:
         - name: telegram_id
@@ -45,6 +46,7 @@ paths:
                   error:
                     type: string
     delete:
+      tags: ["Users"]
       summary: Удалить пользователя по telegram_id
       parameters:
         - name: telegram_id
@@ -83,6 +85,7 @@ paths:
 
   /users/:
     post:
+      tags: ["Users"]
       summary: Создать нового пользователя
       requestBody:
         required: true
@@ -127,6 +130,7 @@ paths:
                   error:
                     type: string
     put:
+      tags: ["Users"]
       summary: Обновить пользователя
       requestBody:
         required: true

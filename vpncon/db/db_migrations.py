@@ -39,9 +39,9 @@ class PostgresMigrationExecutor(MigrationExecutor):
     """
 
     @staticmethod
-    def execute(queries: list[LiteralString], **kwargs: Any) -> list[list[tuple[Any, ...]]]:
+    def execute(queries: list[LiteralString], autocommit:bool=False, **kwargs: Any) -> list[list[tuple[Any, ...]]]:
         logger.debug("Opening new connection for migration executor")
-        with psycopg.connect(Config.DB_URI, connect_timeout=20) as conn:
+        with psycopg.connect(Config.DB_URI, autocommit=autocommit, connect_timeout=20) as conn:
             logger.debug("Connection opened")
             with conn.cursor() as cur:
                 results:list[list[tuple[Any, ...]]] = []

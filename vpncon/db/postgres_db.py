@@ -27,7 +27,8 @@ def get_pool() -> ConnectionPool:
                 _pool = ConnectionPool(
                     conninfo=Config.DB_URI,
                     min_size=Config.DB_POOL_MIN_SIZE,
-                    max_size=Config.DB_POOL_MAX_SIZE
+                    max_size=Config.DB_POOL_MAX_SIZE,
+                    open=True
                 )
     return _pool
 

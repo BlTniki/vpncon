@@ -7,6 +7,9 @@ from typing import Any
 load_dotenv()
 
 class Config:
+    LOG_LEVEL:str = os.getenv("LOG_LEVEL") or "INFO"
+    LOG_LEVELS:str = os.getenv("LOG_LEVELS") or ""
+
     DB_URI:str = os.getenv("DB_URI") or ""
     DB_POOL_MIN_SIZE:int = int(os.getenv("DB_POOL_MIN_SIZE") or 1)
     DB_POOL_MAX_SIZE:int = int(os.getenv("DB_POOL_MAX_SIZE") or 5)
@@ -17,8 +20,7 @@ class Config:
 
 
 def setup_logging(
-    default_path:str="logging.yml",
-    default_level:str="INFO",
+    default_path:str="logging.yml"
 ):
     """
     Настройка логирования через logging.yml и .env
@@ -28,10 +30,10 @@ def setup_logging(
       LOG_LEVELS=myapp.db=INFO,myapp.services.auth=ERROR
     """
     # root уровень
-    root_level = os.getenv("LOG_LEVEL", default_level)
+    root_level = Config.LOG_LEVEL
 
     # Таргетированные уровни
-    raw_levels = os.getenv("LOG_LEVELS", "")
+    raw_levels = Config.LOG_LEVELS
     overrides:dict[str, str] = {}
     for pair in raw_levels.split(","):
         if "=" in pair:

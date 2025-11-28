@@ -8,7 +8,7 @@ load_dotenv()
 
 class Config:
     LOG_LEVEL:str = os.getenv("LOG_LEVEL") or "INFO"
-    LOG_LEVELS:str = os.getenv("LOG_LEVELS") or ""
+    LOG_LEVELS:str = os.getenv("LOG_LEVELS") or ""#format: myapp.db=INFO,myapp.services.auth=WARNING
 
     DB_URI:str = os.getenv("DB_URI") or ""
     DB_POOL_MIN_SIZE:int = int(os.getenv("DB_POOL_MIN_SIZE") or 1)

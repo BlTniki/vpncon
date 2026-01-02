@@ -16,6 +16,8 @@ class Config:
 
     TELEGRAM_BOT_TOKEN:str = os.getenv("TELEGRAM_BOT_TOKEN") or ""
 
+    API_SECRET_WORD:str = os.getenv("API_SECRET_WORD") or "default_secret"
+
 
 
 

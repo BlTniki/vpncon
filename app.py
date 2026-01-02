@@ -1,12 +1,12 @@
 import logging
-from flask import Flask
+from flask import Flask, Response, request, abort
 from swagger_ui import api_doc
 
 
 # ===============================================
 # Setup logging
 # ===============================================
-from vpncon.config import setup_logging
+from vpncon.config import setup_logging, Config
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -38,6 +38,21 @@ from vpncon.users import users_bp
 
 app = Flask(__name__)
 app.register_blueprint(users_bp)
+
+@app.before_request
+def authenticate():
+    """ Простейшая аутентификация по секретному слову из заголовков Basic Auth
+    Если аутентификация не пройдена, возвращается корректный ответ, чтобы
+    браузер мог показать окно ввода логина и пароля.
+    """
+    auth = request.authorization
+    if not auth or auth.password != Config.API_SECRET_WORD:
+        logger.info("Unauthorized access attempt from %s", request.remote_addr)
+        abort(Response(
+            "Unauthorized",
+            401,
+            {"WWW-Authenticate": 'Basic realm="Login Required"'}
+        ))
 
 api_doc(app, config_path='openapi.yml', url_prefix='/api/doc', title='API doc')
 

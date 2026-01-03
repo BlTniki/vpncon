@@ -18,6 +18,13 @@ class Config:
 
     API_SECRET_WORD:str = os.getenv("API_SECRET_WORD") or "default_secret"
 
+    EMAIL_SMTP_SERVER:str = os.getenv("EMAIL_SMTP_SERVER") or ""
+    EMAIL_SMTP_PORT:int = int(os.getenv("EMAIL_SMTP_PORT") or 587)
+    EMAIL_USER:str = os.getenv("EMAIL_USER") or ""
+    EMAIL_PASS:str = os.getenv("EMAIL_PASS") or ""
+    EMAIL_TO:str = os.getenv("EMAIL_TO") or ""
+
+
 
 
 

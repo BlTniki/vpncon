@@ -12,6 +12,13 @@ setup_logging()
 logger = logging.getLogger(__name__)
 logger.info("Logging is set up")
 
+# ===============================================
+# Setup SMTP Notifier
+# ===============================================
+from vpncon.smtp_notifier import smtp_notifier
+
+logger.info("SMTP Notifier initialized")
+
 
 
 # ===============================================

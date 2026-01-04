@@ -183,3 +183,238 @@ paths:
                 properties:
                   error:
                     type: string
+
+  /subscriptions/{subscription_id}:
+    get:
+      tags: ["Subscriptions"]
+      summary: Получить подписку по ID
+      parameters:
+        - name: subscription_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Данные подписки
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  price_in_rub:
+                    type: number
+                  allowed_peers:
+                    type: integer
+                  period:
+                    type: string
+                  role:
+                    type: string
+        404:
+          description: Подписка не найдена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    put:
+      tags: ["Subscriptions"]
+      summary: Обновить подписку по ID
+      parameters:
+        - name: subscription_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                price_in_rub:
+                  type: number
+                allowed_peers:
+                  type: integer
+                period:
+                  type: string
+                role:
+                  type: string
+      responses:
+        200:
+          description: Подписка обновлена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+        404:
+          description: Подписка не найдена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    delete:
+      tags: ["Subscriptions"]
+      summary: Удалить подписку по ID
+      parameters:
+        - name: subscription_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Подписка удалена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+        404:
+          description: Подписка не найдена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /subscriptions/by-role:
+    get:
+      tags: ["Subscriptions"]
+      summary: Получить подписки по роли
+      parameters:
+        - name: role
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Список подписок
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    price_in_rub:
+                      type: number
+                    allowed_peers:
+                      type: integer
+                    period:
+                      type: string
+                    role:
+                      type: string
+        400:
+          description: Параметр role обязателен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /subscriptions/:
+    post:
+      tags: ["Subscriptions"]
+      summary: Создать новую подписку
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                price_in_rub:
+                  type: number
+                allowed_peers:
+                  type: integer
+                period:
+                  type: string
+                role:
+                  type: string
+      responses:
+        201:
+          description: Подписка создана
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+        400:
+          description: ID не уникален или данные некорректны
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string

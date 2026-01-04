@@ -1,7 +1,6 @@
 import logging
 from flask import Flask, Response, request, abort
-from swagger_ui import api_doc
-
+from swagger_ui import api_doc # type: ignore
 
 # ===============================================
 # Setup logging
@@ -42,9 +41,11 @@ logger.info("DB module is initialized")
 # Initialize API
 # ===============================================
 from vpncon.users import users_bp
+from vpncon.subscriptions import subscriptions_bp
 
 app = Flask(__name__)
 app.register_blueprint(users_bp)
+app.register_blueprint(subscriptions_bp)
 
 @app.before_request
 def authenticate():

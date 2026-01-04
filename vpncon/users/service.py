@@ -2,6 +2,7 @@
 import logging
 from abc import ABC, abstractmethod
 
+from vpncon.db import auto_transaction
 from vpncon.db.db import UniqueConstraintError
 
 from .crud import create_user, get_user, update_user, delete_user
@@ -34,6 +35,7 @@ class UserService(ABC):
 
 
 class UserServiceCRUD(UserService):
+    @auto_transaction
     def create_user(self, telegram_id: int, telegram_nick: str, role: str):
         logger.info("Creating user with telegram_id: %s", telegram_id)
         role = Role(role)
@@ -47,10 +49,12 @@ class UserServiceCRUD(UserService):
                 f"User with telegram_id={telegram_id} already exists"
             ) from exc
 
+    @auto_transaction
     def get_user(self, telegram_id: int) -> User | None:
         logger.debug("Retrieving user with telegram_id: %s", telegram_id)
         return get_user(telegram_id)
 
+    @auto_transaction
     def update_user(self, telegram_id: int, telegram_nick: str, role: str) -> None:
         logger.info("Updating user with telegram_id: %s", telegram_id)
         if get_user(telegram_id) is None:
@@ -61,6 +65,7 @@ class UserServiceCRUD(UserService):
         update_user(user)
         logger.info("User updated successfully: %s", telegram_id)
 
+    @auto_transaction
     def delete_user(self, telegram_id: int):
         logger.info("Deleting user with telegram_id: %s", telegram_id)
         if get_user(telegram_id) is None:

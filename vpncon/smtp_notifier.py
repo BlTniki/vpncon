@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 class SMTPNotifier:
     def __init__(self):
+        self.name = Config.EMAIL_NOTIFIER_NAME
         self.smtp_server = Config.EMAIL_SMTP_SERVER
         self.smtp_port = Config.EMAIL_SMTP_PORT
         self.smtp_user = Config.EMAIL_USER
@@ -21,7 +22,7 @@ class SMTPNotifier:
             return
 
         msg = MIMEMultipart()
-        msg['From'] = self.smtp_user
+        msg['From'] = self.name + " <" + self.smtp_user + ">"
         msg['To'] = self.email_to
         msg['Subject'] = subject
 
@@ -48,4 +49,5 @@ smtp_notifier = SMTPNotifier()
 def notify(subject:str, body:str):
     """Отправить уведомление по SMTP на почту, заданный в EMAIL_TO конфига
     """
+    logger.info("Sending SMTP notification: {%s, %s}", subject, body)
     smtp_notifier.notify(subject, body)

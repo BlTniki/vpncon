@@ -18,6 +18,7 @@ class Config:
 
     API_SECRET_WORD:str = os.getenv("API_SECRET_WORD") or "default_secret"
 
+    EMAIL_NOTIFIER_NAME:str = os.getenv("EMAIL_NOTIFIER_NAME") or "vpnconserver"
     EMAIL_SMTP_SERVER:str = os.getenv("EMAIL_SMTP_SERVER") or ""
     EMAIL_SMTP_PORT:int = int(os.getenv("EMAIL_SMTP_PORT") or 587)
     EMAIL_USER:str = os.getenv("EMAIL_USER") or ""

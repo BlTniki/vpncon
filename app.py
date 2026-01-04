@@ -15,7 +15,7 @@ logger.info("Logging is set up")
 # ===============================================
 # Setup SMTP Notifier
 # ===============================================
-from vpncon.smtp_notifier import smtp_notifier
+from vpncon.smtp_notifier import notify
 
 logger.info("SMTP Notifier initialized")
 
@@ -55,6 +55,17 @@ def authenticate():
     auth = request.authorization
     if not auth or auth.password != Config.API_SECRET_WORD:
         logger.info("Unauthorized access attempt from %s", request.remote_addr)
+
+        notify(
+            "Unauthorized access attempt",
+            f"IP Address: {request.remote_addr}\n"
+            f"Requested Endpoint: {request.path}\n"
+            f"HTTP Method: {request.method}\n"
+            f"Full URL: {request.url}\n"
+            f"User-Agent: {request.headers.get('User-Agent', 'Unknown')}\n"
+            f"Authorization Header: {request.headers.get('Authorization', 'None')}"
+        )
+
         abort(Response(
             "Unauthorized",
             401,

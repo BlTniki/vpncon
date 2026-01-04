@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 class SMTPNotifier:
     def __init__(self):
+        self.enabled = Config.EMAIL_NOTIFIER_ENABLED
         self.name = Config.EMAIL_NOTIFIER_NAME
         self.smtp_server = Config.EMAIL_SMTP_SERVER
         self.smtp_port = Config.EMAIL_SMTP_PORT
@@ -17,6 +18,9 @@ class SMTPNotifier:
         self.email_to = Config.EMAIL_TO
 
     def send_email(self, subject:str, body:str):
+        if not self.enabled:
+            logger.info("SMTP Notifier is disabled, skipping email send")
+            return
         if not all([self.smtp_server, self.smtp_user, self.smtp_pass, self.email_to]):
             logger.warning("SMTP configuration incomplete, skipping email send")
             return

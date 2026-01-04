@@ -1,7 +1,9 @@
+import logging
 from typing import Any
-from venv import logger
 from vpncon.db import auto_transaction, get_db_executor, UniqueConstraintError
 from .model import User
+
+logger = logging.getLogger(__name__)
 
 
 @auto_transaction
@@ -50,6 +52,7 @@ def create_user(user:User) -> None:
     }
     try:
         executor.execute(query, **params)
+        logger.info("User created: %s", user.telegram_id)
     except UniqueConstraintError as exc:
         # Абстрагированная проверка по имени класса
         raise UniqueConstraintError(
@@ -64,7 +67,7 @@ def update_user(user:User) -> None:
         user (User): Экземпляр пользователя с обновлёнными данными.
     """
     executor = get_db_executor()
-    query = f"""
+    query = """
         UPDATE users
         SET telegram_nick = %(telegram_nick)s,
             role = %(role)s
@@ -76,6 +79,7 @@ def update_user(user:User) -> None:
         'role': user.role
     }
     executor.execute(query, **params)
+    logger.info("User updated: %s", user.telegram_id)
 
 @auto_transaction
 def delete_user(telegram_id: int) -> None:
@@ -92,3 +96,4 @@ def delete_user(telegram_id: int) -> None:
         'telegram_id': telegram_id
     }
     executor.execute(query, **params)
+    logger.info("User deleted: %s", telegram_id)

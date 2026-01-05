@@ -6,6 +6,7 @@ from psycopg.cursor import Cursor
 from psycopg import Connection
 from psycopg.rows import TupleRow
 from psycopg_pool import ConnectionPool
+from psycopg.types.string import TextLoader
 
 from vpncon.config import Config
 from .db import DBExecutor, UniqueConstraintError
@@ -14,6 +15,16 @@ logger = logging.getLogger(__name__)
 
 _pool: ConnectionPool | None = None
 _pool_lock = threading.Lock()
+
+def get_conn_kwargs() -> dict[str, Any]:
+    """Определяет дополнительные параметры создания соединения с БД."""
+    return {
+        "options": "-c IntervalStyle=iso_8601"
+    }
+
+def configure_connection(conn: Connection) -> None:
+    """Настраивает адаптеры для соединения уже после его создания."""
+    conn.adapters.register_loader("interval", TextLoader)
 
 def get_pool() -> ConnectionPool:
     """ Возвращает пул соединений. Создаёт его при первом обращении.
@@ -28,7 +39,9 @@ def get_pool() -> ConnectionPool:
                     conninfo=Config.DB_URI,
                     min_size=Config.DB_POOL_MIN_SIZE,
                     max_size=Config.DB_POOL_MAX_SIZE,
-                    open=True
+                    open=True,
+                    configure=configure_connection,
+                    kwargs=get_conn_kwargs()
                 )
     return _pool
 

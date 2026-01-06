@@ -418,3 +418,204 @@ paths:
                 properties:
                   error:
                     type: string
+
+  /user-subscriptions/{telegram_id}:
+    get:
+      tags: ["User Subscriptions"]
+      summary: Получить подписку пользователя по telegram_id
+      parameters:
+        - name: telegram_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Данные подписки пользователя
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      telegram_id:
+                        type: integer
+                      telegram_nick:
+                        type: string
+                      role:
+                        type: string
+                  subscription:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      price_in_rub:
+                        type: number
+                      allowed_peers:
+                        type: integer
+                      period:
+                        type: string
+                      role:
+                        type: string
+                  expiry_date:
+                    type: string
+        404:
+          description: Подписка пользователя не найдена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    put:
+      tags: ["User Subscriptions"]
+      summary: Обновить подписку пользователя по telegram_id
+      parameters:
+        - name: telegram_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subscription_id:
+                  type: integer
+                expiry_date:
+                  type: string
+      responses:
+        200:
+          description: Подписка пользователя обновлена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+        400:
+          description: Данные некорректны
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        404:
+          description: Подписка пользователя не найдена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    delete:
+      tags: ["User Subscriptions"]
+      summary: Удалить подписку пользователя по telegram_id
+      parameters:
+        - name: telegram_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Подписка пользователя удалена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+        404:
+          description: Подписка пользователя не найдена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /user-subscriptions/:
+    post:
+      tags: ["User Subscriptions"]
+      summary: Создать новую подписку пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                telegram_id:
+                  type: integer
+                subscription_id:
+                  type: integer
+                expiry_date:
+                  type: string
+      responses:
+        201:
+          description: Подписка пользователя создана
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+        400:
+          description: Данные некорректны
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string

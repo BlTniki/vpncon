@@ -49,7 +49,7 @@ def test_auto_transaction_one_level_of_call_depth(monkeypatch):
     calls = []
     patch_executor(monkeypatch, calls=calls)
 
-    @auto_transaction
+    @auto_transaction()
     def func():
         return 'ok'
 
@@ -61,11 +61,11 @@ def test_auto_transaction_multiple_levels_of_call_depth(monkeypatch):
     calls = []
     patch_executor(monkeypatch, calls=calls)
 
-    @auto_transaction
+    @auto_transaction()
     def inner():
         return 'ok'
 
-    @auto_transaction
+    @auto_transaction()
     def outer():
         return inner()
 
@@ -79,11 +79,11 @@ def test_auto_transaction_error_on_multiple_levels_of_call_depth(monkeypatch):
     calls = []
     patch_executor(monkeypatch, calls=calls)
 
-    @auto_transaction
+    @auto_transaction()
     def inner_exc():
         raise ValueError('fail')
 
-    @auto_transaction
+    @auto_transaction()
     def outer_exc():
         inner_exc()
 
@@ -99,10 +99,10 @@ def test_auto_transaction_depth_multi_thread(monkeypatch):
     results = []
     def worker():
         patch_executor(monkeypatch, calls=calls, results=results)
-        @auto_transaction
+        @auto_transaction()
         def inner():
             return 'ok'
-        @auto_transaction
+        @auto_transaction()
         def outer():
             return inner()
         outer()

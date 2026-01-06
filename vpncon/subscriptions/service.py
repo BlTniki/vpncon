@@ -36,7 +36,7 @@ class SubscriptionService(ABC):
 
 
 class SubscriptionServiceCRUD(SubscriptionService):
-    @auto_transaction
+    @auto_transaction()
     def create_subscription(self, subscription_id: int, price_in_rub: Decimal, allowed_peers: int, period: str, role: str):
         logger.info("Creating subscription with id: %s", subscription_id)
         role = Role(role)
@@ -50,18 +50,18 @@ class SubscriptionServiceCRUD(SubscriptionService):
                 f"Subscription with id={subscription_id} already exists"
             ) from exc
 
-    @auto_transaction
+    @auto_transaction()
     def get_subscription(self, subscription_id: int) -> Subscription | None:
         logger.debug("Retrieving subscription with id: %s", subscription_id)
         return get_subscription(subscription_id)
 
-    @auto_transaction
+    @auto_transaction()
     def get_subscriptions_by_role(self, role: str) -> list[Subscription]:
         logger.debug("Retrieving subscriptions with role: %s", role)
         role = Role(role)
         return get_subscriptions_by_role(role)
 
-    @auto_transaction
+    @auto_transaction()
     def update_subscription(self, subscription_id: int, price_in_rub: Decimal, allowed_peers: int, period: str, role: str) -> None:
         logger.info("Updating subscription with id: %s", subscription_id)
         if get_subscription(subscription_id) is None:
@@ -72,7 +72,7 @@ class SubscriptionServiceCRUD(SubscriptionService):
         update_subscription(subscription)
         logger.info("Subscription updated successfully: %s", subscription_id)
 
-    @auto_transaction
+    @auto_transaction()
     def delete_subscription(self, subscription_id: int):
         logger.info("Deleting subscription with id: %s", subscription_id)
         if get_subscription(subscription_id) is None:

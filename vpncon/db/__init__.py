@@ -23,10 +23,10 @@ except Exception
     db_executor.rollback_and_close()
     ...
 
-# Или, если используется аннотация "@auto_transaction"
+# Или, если используется аннотация "@auto_transaction()"
 from db import get_db_executor, auto_transaction
 
-@auto_transaction
+@auto_transaction()
 def foo(...):
     db_executor = get_db_executor()
     # Транзакция уже открыта
@@ -85,12 +85,19 @@ def get_db_executor() -> DBExecutor:
 P = ParamSpec("P")          # Параметры оборачиваемой функции
 R = TypeVar("R")            # Возвращаемое значение оборачиваемой функции
 
-def auto_transaction(func: Callable[P, R]) -> Callable[P, R]:
+def auto_transaction(
+    always_rollback: bool = False,
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Враппер для функции.
     Управляет подключением и транзакцией `DBExecutor` на время работы функции.
     Открывает транзакцию на входе в функцию и закрывает её после выхода из функции.
+    Также имеет флаг `always_rollback`, если мы всегда хотим откатить транзакцию в конце.
+    Полезно для тестов.
 
-    Служит для упрощения работы с `DBExecutor`. Типовое использование предполагает
+    **Использование**: Добавить перед определением функции аннотацию `@auto_transaction()`.
+    Обязательно со скобками.
+
+    Враппер служит для упрощения работы с `DBExecutor`. Типовое использование предполагает
     использование в качестве аннотации для функции.
     В Аннотированной функции теперь достаточно получить `DBExecutor` через `get_db_executor()`
     и вызывать только `.execute(...)`, не заботясь о подключении и транзакции.
@@ -103,45 +110,49 @@ def auto_transaction(func: Callable[P, R]) -> Callable[P, R]:
     где есть работа с `DBExecutor`
     """
 
-    @wraps(func)
-    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-        # Получаем счётчик глубины для текущего потока
-        depth = getattr(_thread_local, "tx_depth", 0)
-        _thread_local.tx_depth = depth + 1
-        logger.debug("auto_transaction: call depth: %d", _thread_local.tx_depth)
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
+        @wraps(func)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            depth = getattr(_thread_local, "tx_depth", 0)
+            _thread_local.tx_depth = depth + 1
+            logger.debug("auto_transaction: call depth: %d", _thread_local.tx_depth)
 
-        # Получаем экзекьютер для текущего потока
-        db_executor = get_db_executor()
+            db_executor = get_db_executor()
 
-        # Если это первый уровень — открываем транзакцию
-        if depth == 0:
-            logger.debug("auto_transaction: opening the transaction")
-            db_executor.open()
+            if depth == 0:
+                logger.debug("auto_transaction: opening the transaction")
+                db_executor.open()
 
-        try:
-            logger.debug("auto_transaction: call wrapped func")
-            result = func(*args, **kwargs)
+            try:
+                logger.debug("auto_transaction: call wrapped func")
+                result = func(*args, **kwargs)
 
-            # Закрываем транзакцию только при выходе из самого верхнего уровня
-            if _thread_local.tx_depth == 1:
-                logger.debug("auto_transaction: commit the transaction")
-                db_executor.commit_and_close()
+                if _thread_local.tx_depth == 1:
+                    if always_rollback:
+                        logger.debug(
+                            "auto_transaction: always_rollback=True → rollback"
+                        )
+                        db_executor.rollback_and_close()
+                    else:
+                        logger.debug("auto_transaction: commit the transaction")
+                        db_executor.commit_and_close()
 
-            logger.debug("auto_transaction: retrieving func result")
-            return result
-        except Exception:
-            # Закрываем транзакцию только на верхнем уровне
-            logger.debug(
-                "auto_transaction: caught exception on call depth: %d",
-                _thread_local.tx_depth
-            )
+                return result
 
-            if _thread_local.tx_depth == 1:
-                logger.debug("auto_transaction: rollback the transaction")
-                db_executor.rollback_and_close()
-            raise
-        finally:
-            # Уменьшаем глубину
-            _thread_local.tx_depth -= 1
+            except Exception:
+                logger.debug(
+                    "auto_transaction: caught exception on call depth: %d",
+                    _thread_local.tx_depth
+                )
 
-    return wrapper
+                if _thread_local.tx_depth == 1:
+                    logger.debug("auto_transaction: rollback the transaction")
+                    db_executor.rollback_and_close()
+                raise
+
+            finally:
+                _thread_local.tx_depth -= 1
+
+        return wrapper
+
+    return decorator

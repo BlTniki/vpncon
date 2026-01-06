@@ -6,7 +6,7 @@ from .model import User
 logger = logging.getLogger(__name__)
 
 
-@auto_transaction
+@auto_transaction()
 def get_user(telegram_id:int) -> User | None:
     """Получает пользователя по его telegram_id.
     Args:
@@ -32,7 +32,7 @@ def get_user(telegram_id:int) -> User | None:
     logger.debug("User found: %s", result)
     return User.from_raw(result[0])
 
-@auto_transaction
+@auto_transaction()
 def create_user(user:User) -> None:
     """Создаёт нового пользователя.
     Если пользователь с таким telegram_id уже существует, бросает исключение.
@@ -59,7 +59,7 @@ def create_user(user:User) -> None:
             f"User with telegram_id={user.telegram_id} already exists"
         ) from exc
 
-@auto_transaction
+@auto_transaction()
 def update_user(user:User) -> None:
     """Обновляет данные пользователя.
 
@@ -81,7 +81,7 @@ def update_user(user:User) -> None:
     executor.execute(query, **params)
     logger.info("User updated: %s", user.telegram_id)
 
-@auto_transaction
+@auto_transaction()
 def delete_user(telegram_id: int) -> None:
     """Удаляет пользователя по его telegram_id.
 

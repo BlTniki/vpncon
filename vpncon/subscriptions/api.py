@@ -14,7 +14,7 @@ def to_dict(subscription: Subscription) -> dict[str, Any]:
         }
 
 @subscriptions_bp.route('/<int:subscription_id>', methods=['GET'])
-@auto_transaction
+@auto_transaction()
 def api_get_subscription(subscription_id: int):
     subscription = subscription_service.get_subscription(subscription_id)
     if subscription:
@@ -25,7 +25,7 @@ def api_get_subscription(subscription_id: int):
 
 
 @subscriptions_bp.route('/by-role', methods=['GET'])
-@auto_transaction
+@auto_transaction()
 def api_get_subscriptions_by_role():
     role = request.args.get('role')
     if not role:
@@ -38,7 +38,7 @@ def api_get_subscriptions_by_role():
 
 
 @subscriptions_bp.route('/', methods=['POST'])
-@auto_transaction
+@auto_transaction()
 def api_create_subscription():
     data = request.json
     if not data:
@@ -50,7 +50,7 @@ def api_create_subscription():
 
 
 @subscriptions_bp.route('/<int:subscription_id>', methods=['PUT'])
-@auto_transaction
+@auto_transaction()
 def api_update_subscription(subscription_id: int):
     data = request.json
     if not data:
@@ -62,7 +62,7 @@ def api_update_subscription(subscription_id: int):
 
 
 @subscriptions_bp.route('/<int:subscription_id>', methods=['DELETE'])
-@auto_transaction
+@auto_transaction()
 def api_delete_subscription(subscription_id: int):
     subscription_service.delete_subscription(subscription_id)
     return jsonify({'status': 'deleted'})

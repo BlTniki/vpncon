@@ -4,7 +4,7 @@ from ..users import users_bp, user_service
 
 
 @users_bp.route('/<int:telegram_id>', methods=['GET'])
-@auto_transaction
+@auto_transaction()
 def api_get_user(telegram_id:int):
     user = user_service.get_user(telegram_id)
     if user:
@@ -12,7 +12,7 @@ def api_get_user(telegram_id:int):
     return jsonify({'error': 'User not found'}), 404
 
 @users_bp.route('/', methods=['POST'])
-@auto_transaction
+@auto_transaction()
 def api_create_user():
     data = request.json
     user_service.create_user(

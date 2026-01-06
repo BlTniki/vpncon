@@ -7,7 +7,7 @@ from .model import Subscription
 logger = logging.getLogger(__name__)
 
 
-@auto_transaction
+@auto_transaction()
 def get_subscription(subscription_id: int) -> Subscription | None:
     """Получает подписку по её id.
     Args:
@@ -34,7 +34,7 @@ def get_subscription(subscription_id: int) -> Subscription | None:
     return Subscription.from_raw(result[0])
 
 
-@auto_transaction
+@auto_transaction()
 def get_subscriptions_by_role(role: Role) -> list[Subscription]:
     """Получает подписки с определённой ролью.
     Args:
@@ -60,7 +60,7 @@ def get_subscriptions_by_role(role: Role) -> list[Subscription]:
     return subscriptions
 
 
-@auto_transaction
+@auto_transaction()
 def create_subscription(subscription: Subscription) -> None:
     """Создаёт новую подписку.
     Если подписка с таким id уже существует, бросает исключение.
@@ -88,7 +88,7 @@ def create_subscription(subscription: Subscription) -> None:
         ) from exc
 
 
-@auto_transaction
+@auto_transaction()
 def update_subscription(subscription: Subscription) -> None:
     """Обновляет данные подписки.
     Args:
@@ -114,7 +114,7 @@ def update_subscription(subscription: Subscription) -> None:
     logger.info("Subscription updated: %s", subscription.id)
 
 
-@auto_transaction
+@auto_transaction()
 def delete_subscription(subscription_id: int) -> None:
     """Удаляет подписку по её id.
     Args:

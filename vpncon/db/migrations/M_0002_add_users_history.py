@@ -56,9 +56,7 @@ CREATE TABLE IF NOT EXISTS users_history (
     role VARCHAR(255) NOT NULL,
 
     action CHAR(1) NOT NULL CHECK (action IN ('I','U','D')),
-    valid_to TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    PRIMARY KEY (telegram_id, valid_to)
+    valid_to TIMESTAMPTZ NOT NULL DEFAULT NOW()
 )
 ;
 ""","""

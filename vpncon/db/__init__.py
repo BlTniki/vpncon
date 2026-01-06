@@ -113,13 +113,12 @@ def auto_transaction(
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-            depth = getattr(_thread_local, "tx_depth", 0)
-            _thread_local.tx_depth = depth + 1
+            _thread_local.tx_depth = getattr(_thread_local, "tx_depth", 0) + 1
             logger.debug("auto_transaction: call depth: %d", _thread_local.tx_depth)
 
             db_executor = get_db_executor()
 
-            if depth == 0:
+            if _thread_local.tx_depth == 1:
                 logger.debug("auto_transaction: opening the transaction")
                 db_executor.open()
 

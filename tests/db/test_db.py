@@ -116,3 +116,20 @@ def test_auto_transaction_depth_multi_thread(monkeypatch):
 
     assert results.count('commit') == number_of_threads
     assert len([r for r in results if isinstance(r, int)]) == number_of_threads
+
+
+def test_auto_transaction_always_rollback(monkeypatch):
+    calls = []
+    patch_executor(monkeypatch, calls=calls)
+
+    @auto_transaction()
+    def inner():
+        return 'ok'
+
+    @auto_transaction(always_rollback=True)
+    def outer():
+        return inner()
+
+    result = outer()
+    assert result == 'ok'
+    assert calls == ['open', 'rollback']

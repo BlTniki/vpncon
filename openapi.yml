@@ -619,3 +619,188 @@ paths:
                 properties:
                   error:
                     type: string
+
+  /hosts/{host_id}:
+    get:
+      tags: ["Hosts"]
+      summary: Получить хост по ID
+      parameters:
+        - name: host_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Данные хоста
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  ip_address:
+                    type: string
+                  port:
+                    type: integer
+                  host_password:
+                    type: string
+        404:
+          description: Хост не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    put:
+      tags: ["Hosts"]
+      summary: Обновить хост по ID
+      parameters:
+        - name: host_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                ip_address:
+                  type: string
+                port:
+                  type: integer
+                host_password:
+                  type: string
+      responses:
+        200:
+          description: Хост обновлен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+        404:
+          description: Хост не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    delete:
+      tags: ["Hosts"]
+      summary: Удалить хост по ID
+      parameters:
+        - name: host_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Хост удален
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+        404:
+          description: Хост не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /host/:
+    post:
+      tags: ["Hosts"]
+      summary: Создать новый хост
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                name:
+                  type: string
+                ip_address:
+                  type: string
+                port:
+                  type: integer
+                host_password:
+                  type: string
+      responses:
+        201:
+          description: Хост создан
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+        400:
+          description: ID не уникален или данные некорректны
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string

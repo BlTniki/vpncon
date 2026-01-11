@@ -804,3 +804,280 @@ paths:
                 properties:
                   error:
                     type: string
+
+  /peers/{telegram_id}:
+    get:
+      tags: ["Peers"]
+      summary: Получить пиры пользователя по telegram_id
+      parameters:
+        - name: telegram_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: conf_name
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: Список пиров пользователя
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    user:
+                      type: object
+                      properties:
+                        telegram_id:
+                          type: integer
+                        telegram_nick:
+                          type: string
+                        role:
+                          type: string
+                    host:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        ip_address:
+                          type: string
+                        port:
+                          type: integer
+                        host_password:
+                          type: string
+                    conf_name:
+                      type: string
+                    peer_ip:
+                      type: string
+                    is_active:
+                      type: boolean
+        404:
+          description: Пиры не найдены
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+    delete:
+      tags: ["Peers"]
+      summary: Удалить пира пользователя по telegram_id и conf_name
+      parameters:
+        - name: telegram_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: conf_name
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Пир удален
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+        400:
+          description: Параметр conf_name обязателен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        404:
+          description: Пир не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /peers/:
+    post:
+      tags: ["Peers"]
+      summary: Создать нового пира
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                telegram_id:
+                  type: integer
+                host_id:
+                  type: integer
+                conf_name:
+                  type: string
+      responses:
+        201:
+          description: Пир создан
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+        400:
+          description: Данные некорректны
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /peers/switch_active:
+    put:
+      tags: ["Peers"]
+      summary: Переключить статус активности пира
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                telegram_id:
+                  type: integer
+                conf_name:
+                  type: string
+                is_active:
+                  type: boolean
+      responses:
+        200:
+          description: Статус активности обновлен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+        400:
+          description: Данные некорректны
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        404:
+          description: Пир не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /peers/{telegram_id}/download_token:
+    get:
+      tags: ["Peers"]
+      summary: Получить токен для скачивания конфигурации пира
+      parameters:
+        - name: telegram_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: conf_name
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Токен получен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+        400:
+          description: Параметр conf_name обязателен
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        404:
+          description: Пир не найден
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+        500:
+          description: Internal error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string

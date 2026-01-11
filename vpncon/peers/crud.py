@@ -21,7 +21,9 @@ def get_peer(telegram_id: int, conf_name: str) -> Peer | None:
         SELECT
             u.*,
             h.*,
-            us.expiry_date
+            p.conf_name,
+            p.peer_ip,
+            p.is_active
         FROM peers p
         JOIN users u ON u.telegram_id = p.user_id
         JOIN hosts h ON h.id = p.host_id
@@ -52,7 +54,9 @@ def get_all_peers_by_user(telegram_id: int) -> list[Peer]:
         SELECT
             u.*,
             h.*,
-            us.expiry_date
+            p.conf_name,
+            p.peer_ip,
+            p.is_active
         FROM peers p
         JOIN users u ON u.telegram_id = p.user_id
         JOIN hosts h ON h.id = p.host_id
@@ -77,11 +81,11 @@ def pick_and_lock_peer_ip(host_id: int) -> str|None:
     executor = get_db_executor()
 
     query = """
-        UPDATE ip_pool
+        UPDATE host_ip_pool
         SET is_used = true
         WHERE (host_id, peer_ip) = (
             SELECT host_id, peer_ip
-            FROM ip_pool
+            FROM host_ip_pool
             WHERE host_id = %(host_id)s AND is_used = false
             LIMIT 1
             FOR UPDATE SKIP LOCKED
@@ -106,7 +110,7 @@ def release_peer_ip(host_id: int, peer_ip: str) -> None:
     """
     executor = get_db_executor()
     query = """
-        UPDATE ip_pool
+        UPDATE host_ip_pool
         SET is_used = false
         WHERE host_id = %(host_id)s AND peer_ip = %(peer_ip)s
     """

@@ -43,11 +43,15 @@ logger.info("DB module is initialized")
 from vpncon.users import users_bp
 from vpncon.subscriptions import subscriptions_bp
 from vpncon.user_subscriptions import user_subscriptions_bp
+from vpncon.hosts import hosts_bp
+from vpncon.peers import peers_bp
 
 app = Flask(__name__)
 app.register_blueprint(users_bp)
 app.register_blueprint(subscriptions_bp)
 app.register_blueprint(user_subscriptions_bp)
+app.register_blueprint(hosts_bp)
+app.register_blueprint(peers_bp)
 
 @app.before_request
 def authenticate():

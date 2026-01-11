@@ -48,6 +48,10 @@ class PeerService(ABC):
     def delete_peer(self, telegram_id: int, conf_name: str) -> None:
         pass
 
+    @abstractmethod
+    def get_peer_download_token(self, telegram_id: int, conf_name: str) -> str:
+        pass
+
 
 class PeerServiceCRUD(PeerService):
     @auto_transaction()
@@ -177,3 +181,32 @@ class PeerServiceCRUD(PeerService):
             )
         except Exception as exc:
             raise RuntimeError("Failed to delete peer from host") from exc
+
+    @auto_transaction()
+    def get_peer_download_token(self, telegram_id: int, conf_name: str) -> str:
+        logger.info(
+            "Getting download token for peer with telegram_id: %s and conf_name: %s",
+            telegram_id,
+            conf_name,
+        )
+        peer = get_peer(telegram_id, conf_name)
+        if peer is None:
+            logger.warning(
+                "Peer with conf_name `%s` for telegram_id: %s does not exist",
+                conf_name,
+                telegram_id,
+            )
+            raise EntityNotExistsException(
+                f"Peer with conf_name={conf_name} for User with telegram_id={telegram_id} does not exist"
+            )
+        hc = HostClient(peer)
+        try:
+            token = hc.get_download_conf_token()
+            logger.info(
+                "Download token for peer with conf_name `%s` for telegram_id: %s retrieved successfully",
+                conf_name,
+                telegram_id,
+            )
+            return token
+        except Exception as exc:
+            raise RuntimeError("Failed to get download token from host") from exc

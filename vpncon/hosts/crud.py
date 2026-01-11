@@ -102,3 +102,68 @@ def delete_host(host_id: int) -> None:
     }
     executor.execute(query, **params)
     logger.info("Host deleted: %s", host_id)
+
+
+@auto_transaction()
+def create_ip_pool_for_host(host_id: int, ip_list: list[str]) -> None:
+    """Создаёт пул IP-адресов для хоста.
+    Args:
+        host_id (int): Идентификатор хоста.
+        ip_list (list[str]): Список IP-адресов для пула.
+    """
+    executor = get_db_executor()
+
+    # Batch insert IPs into the pool
+    batch_inserts: list[str] = []
+    for ip in ip_list:
+        batch_inserts.append(f"({host_id}, '{ip}', false)")
+    query = f"""
+        INSERT INTO host_ip_pool (host_id, peer_ip, is_used)
+        VALUES
+            {', '.join(batch_inserts)}
+    """
+    try:
+        executor.execute(query) # type: ignore
+    except UniqueConstraintError as exc:
+        raise UniqueConstraintError(
+            f"IP pool for host_id={host_id} already exists"
+        ) from exc
+
+    logger.info("IP pool created for host: %s", host_id)
+
+
+@auto_transaction()
+def delete_ip_pool_for_host(host_id: int) -> None:
+    """Удаляет пул IP-адресов для хоста.
+    Args:
+        host_id (int): Идентификатор хоста.
+    """
+    executor = get_db_executor()
+    query = """
+        DELETE FROM host_ip_pool WHERE host_id = %(host_id)s
+    """
+    params: dict[str, Any] = {
+        'host_id': host_id
+    }
+    executor.execute(query, **params)
+    logger.info("IP pool deleted for host: %s", host_id)
+
+
+@auto_transaction()
+def get_ip_pool_for_host(host_id: int) -> list[str]:
+    """Получает пул IP-адресов для хоста.
+    Args:
+        host_id (int): Идентификатор хоста.
+    Returns:
+        list[str]: Список IP-адресов в пуле.
+    """
+    executor = get_db_executor()
+    query = """
+        SELECT peer_ip FROM host_ip_pool WHERE host_id = %(host_id)s ORDER BY peer_ip
+    """
+    params: dict[str, Any] = {
+        'host_id': host_id
+    }
+    result = executor.execute(query, **params)
+    return [row[0] for row in result]
+

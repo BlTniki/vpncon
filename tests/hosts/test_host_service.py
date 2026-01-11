@@ -1,8 +1,10 @@
 import pytest
+from collections import Counter
 from vpncon.db import auto_transaction
 from vpncon.hosts.service import HostServiceCRUD
 from vpncon.hosts.model import Host
 from vpncon.exceptions import EntityAlreadyExistsException, EntityNotExistsException
+from vpncon.hosts.crud import get_ip_pool_for_host
 
 @pytest.fixture
 def service():
@@ -18,6 +20,11 @@ def test_create_host_success(service):
     assert host.ip_address == '192.168.1.1'
     assert host.port == 22
     assert host.host_password == 'password123'
+    
+    # Check IP pool is created
+    ip_pool = get_ip_pool_for_host(1)
+    expected_ips = [f"10.8.0.{i}" for i in range(2, 255)]
+    assert Counter(ip_pool) == Counter(expected_ips)
 
 @auto_transaction(always_rollback=True)
 def test_create_host_conflict(service):
@@ -49,8 +56,16 @@ def test_update_host_not_exists(service):
 @auto_transaction(always_rollback=True)
 def test_delete_host_success(service):
     service.create_host(4, 'host4', '192.168.1.4', 22, 'pass4')
+    # Verify IP pool exists before deletion
+    ip_pool_before = get_ip_pool_for_host(4)
+    assert len(ip_pool_before) > 0
+    
     service.delete_host(4)
     assert service.get_host(4) is None
+    
+    # Check IP pool is deleted
+    ip_pool_after = get_ip_pool_for_host(4)
+    assert ip_pool_after == []
 
 @auto_transaction(always_rollback=True)
 def test_delete_host_not_exists(service):

@@ -49,6 +49,10 @@ class PeerService(ABC):
         pass
 
     @abstractmethod
+    def deactivate_all_peers(self, telegram_id: int) -> None:
+        pass
+
+    @abstractmethod
     def get_peer_download_token(self, telegram_id: int, conf_name: str) -> str:
         pass
 
@@ -151,6 +155,24 @@ class PeerServiceCRUD(PeerService):
                 )
         except Exception as exc:
             raise RuntimeError("Failed to switch peer from host") from exc
+
+    @auto_transaction()
+    def deactivate_all_peers(self, telegram_id: int) -> None:
+        logger.info("Deactivating all peers for telegram_id: %s", telegram_id)
+        peers = get_all_peers_by_user(telegram_id)
+        for peer in peers:
+            if peer.is_active:
+                try:
+                    switch_peer_active_status(telegram_id, peer.conf_name, False)
+                except Exception as exc:
+                    logger.error(
+                        "Failed to deactivate peer %s for user %s: %s",
+                        peer.conf_name,
+                        telegram_id,
+                        exc,
+                    )
+                    raise RuntimeError("Failed to deactivate all peers on host") from exc
+        logger.info("All peers for telegram_id %s are deactivated", telegram_id)
 
     @auto_transaction()
     def delete_peer(self, telegram_id: int, conf_name: str) -> None:

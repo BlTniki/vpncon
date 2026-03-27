@@ -12,7 +12,7 @@ class Subscription(DataModel):
     id: int
     price_in_rub: Decimal
     allowed_peers: int
-    period: str  # INTERVAL as string, e.g., '1 month', '30 days'
+    period: str  # INTERVAL as string, e.g., '1 month', '30 days' or 'P1M' (ISO 8601 duration)
     role: Role
 
     @staticmethod

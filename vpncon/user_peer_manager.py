@@ -127,6 +127,13 @@ class UserPeerSubscriptionManager:
 
     @auto_transaction()
     def add_subscription_to_user(self, telegram_id: int, subscription_id: int) -> UserSubscription:
+        """Добавляет подписку к пользователю. Если подписка уже есть, то продлевает её.
+            Если пользователь перешёл на другой тарифный план, то деактивирует все его пиры.
+
+            Начисляет подписку максимально тупо, без сложной логики пересчёта отставшего времени.
+            Просто, если подписка есть, то добавляет к её expiry_date период новой подписки.
+            Если подписки нет, то создаёт новую с expiry_date = today + период новой подписки.
+        """
         # Получаем текущую подписку пользователя
         cur_user_sub = user_subscription_service.get_user_subscription(telegram_id)
 

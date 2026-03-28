@@ -755,7 +755,7 @@ paths:
                 properties:
                   error:
                     type: string
-  /host/:
+  /hosts:
     post:
       tags: ["Hosts"]
       summary: Создать новый хост

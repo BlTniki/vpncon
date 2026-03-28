@@ -3,6 +3,7 @@ import requests
 from dataclasses import dataclass
 
 from .model import Peer
+from vpncon.config import Config
 
 
 class HostClientException(Exception):
@@ -11,47 +12,52 @@ class HostClientException(Exception):
 
 @dataclass
 class PeerForHost:
-    peerId: str
-    peerIp: str
+    peer_id: str
+    peer_ip: str
+    is_activated: bool
 
 @dataclass
 class PeerFromHost:
-    peerId: str
-    peerIp: str
-    peerPrivateKey: str
-    peerPublicKey: str
+    peer_id: str
+    peer_ip: str
+    peer_private_key: str
+    peer_public_key: str
+    is_activated: bool
 
 def build_peer_from_host(data: dict[str, Any]) -> PeerFromHost:
     return PeerFromHost(
-        peerId=data["peerId"],
-        peerIp=data["peerIp"],
-        peerPrivateKey=data["peerPrivateKey"],
-        peerPublicKey=data["peerPublicKey"],
+        peer_id=data["peer_id"],
+        peer_ip=data["peer_ip"],
+        peer_private_key=data["peer_private_key"],
+        peer_public_key=data["peer_public_key"],
+        is_activated=data["is_activated"]
     )
 
 
 class HostClient:
-    api_version = "1.0"
-
     def __init__(self, peer:Peer):
+        peer_id = f"{peer.conf_name}_{peer.peer_ip.split('.')[-1]}"
+
+
         self.peer_for_request = PeerForHost(
-            peerId=f"{peer.conf_name}",
-            peerIp=peer.peer_ip,
+            peer_id=peer_id,
+            peer_ip=peer.peer_ip,
+            is_activated=peer.is_active
         )
 
-        self.host_ip_address = (
-            f"http://{peer.host.ip_address}:{peer.host.port}/api/{self.api_version}"
+        self.host_url = (
+            f"{Config.HOST_PROTOCOL}://{peer.host.ip_address}:{peer.host.port}/peers"
         )
 
         self.headers = {
             "Auth": peer.host.host_password
         }
 
-    def _request(self, method: str, url: str, json_body: dict[str, Any]|None=None):
+    def _request(self, method: str, endpoint: str, json_body: dict[str, Any]|None=None):
         try:
             response = requests.request(
                 method=method,
-                url=url,
+                url=f"{self.host_url}/{endpoint}",
                 headers=self.headers,
                 json=json_body,
                 timeout=10,
@@ -62,27 +68,36 @@ class HostClient:
             raise HostClientException(str(e)) from e
 
     def create_peer_on_host(self) -> PeerFromHost:
-        url = f"{self.host_ip_address}/peers"
+        endpoint = "peers"
         response = self._request(
             "POST",
-            url,
+            endpoint,
             json_body=self.peer_for_request.__dict__,
         )
-        return build_peer_from_host(response.json())
+        return build_peer_from_host(response.json()["peer"])
 
     def delete_peer_on_host(self):
-        url = f"{self.host_ip_address}/peers/{self.peer_for_request.peerId}"
-        self._request("DELETE", url)
+        endpoint = f"peers/{self.peer_for_request.peer_id}"
+        self._request("DELETE", endpoint)
+
+    def get_peer_info(self) -> PeerFromHost:
+        endpoint = f"peers/{self.peer_for_request.peer_id}"
+        response = self._request("GET", endpoint)
+        return build_peer_from_host(response.json()["peer"])
 
     def get_download_conf_token(self) -> str:
-        url = f"{self.host_ip_address}/conf/{self.peer_for_request.peerId}"
-        response = self._request("POST", url)
+        endpoint = f"peers/{self.peer_for_request.peer_id}/download"
+        response = self._request("GET", endpoint)
         return response.text
 
+    def sync_peers_on_host(self):
+        endpoint = f"peers/sync"
+        self._request("POST", endpoint)
+
     def activate_on_host(self):
-        url = f"{self.host_ip_address}/peers/activate/{self.peer_for_request.peerId}"
-        self._request("POST", url)
+        endpoint = f"peers/{self.peer_for_request.peer_id}/activate"
+        self._request("POST", endpoint)
 
     def deactivate_on_host(self):
-        url = f"{self.host_ip_address}/peers/deactivate/{self.peer_for_request.peerId}"
-        self._request("POST", url)
+        endpoint = f"peers/{self.peer_for_request.peer_id}/deactivate"
+        self._request("POST", endpoint)

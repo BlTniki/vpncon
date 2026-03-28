@@ -26,6 +26,8 @@ class Config:
     EMAIL_PASS:str = os.getenv("EMAIL_PASS") or ""
     EMAIL_TO:str = os.getenv("EMAIL_TO") or ""
 
+    HOST_PROTOCOL:str = os.getenv("HOST_PROTOCOL") or "http"
+
 
 
 

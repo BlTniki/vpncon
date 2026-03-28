@@ -162,16 +162,7 @@ class PeerServiceCRUD(PeerService):
         peers = get_all_peers_by_user(telegram_id)
         for peer in peers:
             if peer.is_active:
-                try:
-                    switch_peer_active_status(telegram_id, peer.conf_name, False)
-                except Exception as exc:
-                    logger.error(
-                        "Failed to deactivate peer %s for user %s: %s",
-                        peer.conf_name,
-                        telegram_id,
-                        exc,
-                    )
-                    raise RuntimeError("Failed to deactivate all peers on host") from exc
+                self.switch_peer_active_status(telegram_id, peer.conf_name, False)
         logger.info("All peers for telegram_id %s are deactivated", telegram_id)
 
     @auto_transaction()
@@ -189,7 +180,8 @@ class PeerServiceCRUD(PeerService):
                 telegram_id,
             )
             raise EntityNotExistsException(
-                f"Peer with conf_name={conf_name} for User with telegram_id={telegram_id} does not exist"
+                f"Peer with conf_name={conf_name} for"
+                + f" User with telegram_id={telegram_id} does not exist"
             )
         delete_peer(telegram_id, conf_name)
         release_peer_ip(peer.host.id, peer.peer_ip)
@@ -219,13 +211,15 @@ class PeerServiceCRUD(PeerService):
                 telegram_id,
             )
             raise EntityNotExistsException(
-                f"Peer with conf_name={conf_name} for User with telegram_id={telegram_id} does not exist"
+                f"Peer with conf_name={conf_name} for"
+                + f" User with telegram_id={telegram_id} does not exist"
             )
         hc = HostClient(peer)
         try:
             token = hc.get_download_conf_token()
             logger.info(
-                "Download token for peer with conf_name `%s` for telegram_id: %s retrieved successfully",
+                "Download token for peer with conf_name"
+                + " `%s` for telegram_id: %s retrieved successfully",
                 conf_name,
                 telegram_id,
             )

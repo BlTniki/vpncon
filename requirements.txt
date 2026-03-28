@@ -9,3 +9,4 @@ swagger-ui-py==25.7.1
 colorlog==6.9.0
 isodate==0.7.2
 python-dateutil==2.9.0.post0
+pytest==9.0.2

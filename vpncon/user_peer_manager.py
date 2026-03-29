@@ -50,6 +50,10 @@ class UserPeerSubscriptionManager:
             raise EntityValidationFailedException(
                 f"User with telegram_id={telegram_id} cannot activate more peers"
             )
+
+        # Придумываем точно уникальное имя conf_name, чтобы избежать проблем на хосте
+        conf_name = f"{conf_name}_{telegram_id}"
+
         return peer_service.create_peer(telegram_id, host_id, conf_name)
 
     @auto_transaction()

@@ -36,11 +36,8 @@ def build_peer_from_host(data: dict[str, Any]) -> PeerFromHost:
 
 class HostClient:
     def __init__(self, peer:Peer):
-        peer_id = f"{peer.conf_name}_{peer.peer_ip.split('.')[-1]}"
-
-
         self.peer_for_request = PeerForHost(
-            peer_id=peer_id,
+            peer_id=peer.conf_name,
             peer_ip=peer.peer_ip,
             is_activated=peer.is_active
         )
